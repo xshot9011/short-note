@@ -27,6 +27,7 @@ pip install django-filter
 pip install pillow
 pip install psycopg2
 pip install gunicorn
+pip install whitenoise
 ```
 
 ## step 2:
@@ -41,10 +42,18 @@ INSTALLED_APPS = [
 ]
 ...
 ...
+MIDDLEWARE = [
+    # third-party
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    # default
+    ...
+]
+...
+...
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'manager/static/')
+    os.path.join(BASE_DIR, '[ชื่อapp]/static/')
 ]
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -56,54 +65,6 @@ try:
 except ImportError:
     pass
 ```
-
-## step 3:
-
-### urls.py
-
-```python
-from django.urls import path, include
-from django.conf import settings
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-...
-...
-urlpatterns = [
-	...
-	path('login/token/', Token.as_view(), name='token_obtain_pair'),
-	path('login/token/refresh/', TokenRefreshView.as_view(),name='token_refresh'),
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-```
-
-### serializers.py
-
-```python
-from rest_framework import serializers
-```
-
-### views.py
-
-```python
-from rest_framework import viewsets, status, mixins
-from rest_framework.response import Response
-from rest_framework.views import APIView
-```
-
-### urls.py
-
-```python
-from django.urls import path, include
-from rest_framework import routers
-...
-...
-router = routers.DefaultRouter()
-app_name = '[app name]'
-...
-...
-urlpatterns = [
-    path('', include(router.urls)),
-]
-```
-
 ### rest_framework
 
 ```python
@@ -148,4 +109,54 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+```
+
+## step 3:
+
+### urls.py
+
+```python
+from django.contrib import admin
+from django.urls import path, include
+from django.conf.urls.static import static
+from django.conf import settings
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('login/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('login/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # app url
+
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
+
+### serializers.py
+
+```python
+from rest_framework import serializers
+```
+
+### views.py
+
+```python
+from rest_framework import viewsets, status, mixins
+from rest_framework.response import Response
+from rest_framework.views import APIView
+```
+
+### urls.py
+
+```python
+from django.urls import path, include
+from rest_framework import routers
+...
+...
+router = routers.DefaultRouter()
+app_name = '[app name]'
+...
+...
+urlpatterns = [
+    path('', include(router.urls)),
+]
 ```
