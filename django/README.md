@@ -127,7 +127,7 @@ urlpatterns = [
     path('login/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('login/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     # app url
-
+    path('app/', include('board.api.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 ```
 
@@ -135,14 +135,43 @@ urlpatterns = [
 
 ```python
 from rest_framework import serializers
+
+class OrderSerializer(serializers.ModelSerializer):
+    party_id = serializers.IntegerField(min_value=1, write_only=True)
+    goods_name = serializers.SerializerMethodField('get_goods_name')
+
+    class Meta:
+        model = OrderItem
+        fields = ['party_id', 'goods_id', 'order_qty', 'price_unit', 'order_price', 'is_serve', 'created',
+                  'goods_name']
+        extra_kwargs = {
+            'price_unit': {'read_only': True},
+            'order_price': {'read_only': True},
+            'create': {'read_only': True},
+            'is_serve': {'read_only': True},
+        }
+
+    def get_goods_name(self, obj):
+        return obj.[something]
 ```
 
-### views.py
+### api.py
 
 ```python
 from rest_framework import viewsets, status, mixins
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
+
+class MyOrderViewSet(mixins.RetrieveModelMixin,
+                     mixins.ListModelMixin,
+                     viewsets.GenericViewSet):
+    queryset = Party.objects.all()
+    serializer_class = MyOrderSerializer
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    search_fields = ['party_name', ]
+    filterset_fields = ['is_active', ]
 ```
 
 ### urls.py
@@ -150,9 +179,11 @@ from rest_framework.views import APIView
 ```python
 from django.urls import path, include
 from rest_framework import routers
+from .api import [viewset class]
 ...
 ...
 router = routers.DefaultRouter()
+router.register('[path with no /]', [viewset class])
 app_name = '[app name]'
 ...
 ...
