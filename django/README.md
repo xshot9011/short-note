@@ -192,3 +192,92 @@ urlpatterns = [
     path('', include(router.urls)),
 ]
 ```
+
+# deploy on heroku
+
+## 1. download and install heroku cli 
+
+follow on youtube
+
+## 2. add heorku remote to git
+
+```bash
+heroku create
+```
+
+get the remote repo's heroku
+
+## 3. install requirement
+
+```bash
+pip install dj-database-url
+pip freeze > requirements.txt
+```
+
+## 4. add more file
+
+name: Procfile
+
+```txt
+# in Profile
+web gunicorn [project].wsgi --log-file -
+```
+
+name: runtime.txt
+
+```
+# in runtime.txt
+python-3.7.3
+```
+
+## 5. set up settings
+
+```python
+import dj_database_url
+
+DEBUG = False
+
+ALLOWED_HOST = ['*']
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
+```
+
+## 6. connect free database on heroku
+
+heroku not allow you to use sqlite on server
+so you need to use others, providing by heroku
+
+```bash
+heroku addons:create heroku-postgresql:hobby-dev
+```
+
+go to heroku url in your application
+app > setting > config var > 
+create new config var name 'SECRET_KEY' and get the key's value in settings.py
+
+you will notice 
+DATABASE_URL >>> [some url] copy it !
+
+```python
+# in settings.py
+import dj_database_url
+...
+DATABASES = {
+    ...
+}
+# put it below 
+DATABASES['default'] = dj_database_url.config(default='[some url]')
+```
+
+## 7. push it to server
+
+```bash
+git add *
+git commit -m "deploy"
+git push origin master
+heroku config:set DISABLE_COLLECTSSTATIC=1 
+git push heroku master
+heroku run python manage.py migrate
+heroku run python manage.py createsuperuser
+```
