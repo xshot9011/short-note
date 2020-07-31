@@ -121,3 +121,10 @@ df['[column_name]'] = df['[column_name]'].apply([function name with out ()])
 df.index.name 
 ```
 
+## Set the value to column
+
+```python
+df.loc[df['[column_name]'] == 0, '[column_name]'] = 1
+```
+
+if loc[condition] จะไม่สามารถกำหนดค่าได้เพราะเราลือกมาทั้งแถว แต่ถ้าเป็น [condition, column] มันจะอารมณ์เหมือนกับเลือก cell นั้นเพื่อกำหนดค่า
