@@ -9,8 +9,3 @@ git filter-branch --index-filter "git rm -rf --cached --ignore-unmatch .env" HEA
 git push --force
 ```
 
-## อยากให้่ auto runserver เมื่อมีการเปลี่ยนแปลง
-
-```bash
-nodemon --exec go run ./server.go --signal SIGTERM
-```
