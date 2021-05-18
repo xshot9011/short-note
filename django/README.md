@@ -1,9 +1,27 @@
 # basic setup
 
 note: env with python3.7 is required
-```bash
 
+## env file
+
+```bash
+pip install python-decouple
 ```
+
+in .env file containe
+```text
+KEY=VALUE
+```
+
+To use
+```python
+from couple import config
+
+var = config('KEY')
+```
+
+
+
 ## command
 
 ```bash
