@@ -50,6 +50,42 @@ pip install whitenoise
 
 ## step 2:
 
+### models.py
+
+```python
+from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator, ... # just try yourself
+
+# MVC's design fat at model thin at controller
+
+class Board(models.Model):
+    name = models.CharField(max_length=100)
+    color_code = models.CharField(max_length=23, null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return '<id:{}, name:{}>'.format(str(self.pk), str(self.name))
+```
+
+### admin.py
+
+```python
+from django.contrib import admin
+from .models import (Board, List)
+
+
+@admin.register(Board)
+class BoardAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(List)
+class ListAdmin(admin.ModelAdmin):
+    list_filter = ['board']  # there are many field just google
+```
+
+### setting
+
 config in settings.py
 
 ```python
