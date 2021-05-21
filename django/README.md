@@ -46,7 +46,13 @@ pip install pillow
 pip install psycopg2
 pip install gunicorn
 pip install whitenoise
+
+# admin
+pip install python-decouple
+pip install djongo
 ```
+
+>> djongo -> no sql dont run any command of databse before using this
 
 ## step 2:
 
@@ -89,12 +95,28 @@ class ListAdmin(admin.ModelAdmin):
 config in settings.py
 
 ```python
+
+# for import environment var
+from decouple import config
+
+SECRET_KEY = config('SECRET_KEY')
+
 INSTALLED_APPS = [
 	'rest_framework',
 	'django_filters',
 	...
 ]
 ...
+
+# for database mongodb
+DATABASES = {
+    'default': {
+        'ENGINE': 'djongo',
+        'NAME': '[mongoDB database name]',
+    }
+}
+
+
 ...
 MIDDLEWARE = [
     # third-party
