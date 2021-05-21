@@ -26,7 +26,7 @@ var = config('KEY')
 
 ```bash
 django-admin startproject [project’s name]
-python .\manage.py startapp [app’s name]
+python .\manage.py startapp [app’s name]  # don't forget to add [name].apps.[Name]Config to install apps
 python .\manage.py runserver
 python .\manage.py makemigrations
 python .\manage.py migrate
