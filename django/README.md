@@ -41,14 +41,14 @@ SECRET_KEY = config('SECRET_KEY')
 
 ```python
 def calculate_age(born):
-    today = date.today()
-    return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+	today = date.today()
+	return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
 
 @deconstructible
 class MinAgeValidator(BaseValidator):
-    compare = lambda self, a, b: calculate_age(a) < b
-    message = _("Age must be at least %(limit_value)d.")
-    code = 'min_age'
+	compare = lambda self, a, b: calculate_age(a) < b
+	message = _("Age must be at least %(limit_value)d.")
+	code = 'min_age'
 ```
 
 ```python
@@ -65,26 +65,26 @@ class AbstractTimeStamp(models.Model):
 	class Meta:
 		abstract = True
 		permissions = [('can_deliver_pizzas', 'Can deliver pizzas')]
-									#(permission_code, human_readable_permission_name)
+				     	#(permission_code, human_readable_permission_name)
 		unique_together = [['driver', 'restaurant']]
 		indexes = [models.Index(fields=['last_name', 'first_name']),
-	             models.Index(fields=['first_name'], name='first_name_idx'),]
-							# index_together may be deprecated in future
+					models.Index(fields=['first_name'], name='first_name_idx'),]
+					# index_together may be deprecated in future
 		constraints = [models.CheckConstraint(check=model.Q(age__gte=18), name='age_gte_18')
-								# constraints will raise error when run .save()
+					# constraints will raise error when run .save()
 
 class Board(AbstractTimeStamp):
 	
 	class YearInSchool(models.TextChoices):  # IntegerChoices
 		FRESHMAN = 'FR', _('Freshman')         # 0, _('No') or 1, _('Yes')
-    SOPHOMORE = 'SO', _('Sophomore')
-    JUNIOR = 'JR', _('Junior')
-    SENIOR = 'SR', _('Senior')
-    GRADUATE = 'GR', _('Graduate')
-		year_in_school = models.CharField(max_length=2,
-															        choices=YearInSchool.choices,
-															        default=YearInSchool.FRESHMAN,)
-
+		SOPHOMORE = 'SO', _('Sophomore')
+		JUNIOR = 'JR', _('Junior')
+		SENIOR = 'SR', _('Senior')
+		GRADUATE = 'GR', _('Graduate')
+		
+	year_in_school = models.CharField(max_length=2,
+									  choices=YearInSchool.choices,
+									  default=YearInSchool.FRESHMAN,)
 	name = models.CharField(max_length=100)
 	birth_date = models.DateField(validators=[MinAgeValidator(18), ])
 	user = models.ForeignKey(User, on_delete=models.CASCADE)    
@@ -114,22 +114,24 @@ class ListAdmin(admin.ModelAdmin):
 from rest_framework import serializers
 
 class OrderSerializer(serializers.ModelSerializer):
-		party_id = serializers.IntegerField(min_value=1, write_only=True)
-    goods_name = serializers.SerializerMethodField('get_goods_name')
+	party_id = serializers.IntegerField(min_value=1, write_only=True)
+	goods_name = serializers.SerializerMethodField('get_goods_name')
 
-    class Meta:
-        model = OrderItem
-        fields = ['party_id', 'goods_id', 'order_qty', 'price_unit', 'order_price', 'is_serve', 'created',
-                  'goods_name']
-        extra_kwargs = {
-            'price_unit': {'read_only': True},
-            'order_price': {'read_only': True},
-            'create': {'read_only': True},
-            'is_serve': {'read_only': True},
-        }
+	class Meta:
+		model = OrderItem
+		fields = [
+			'party_id', 'goods_id', 'order_qty', 'price_unit', 'order_price', 'is_serve', 		 
+			'created', 'goods_name',
+		]]
+		extra_kwargs = {
+			'price_unit': {'read_only': True},
+			'order_price': {'read_only': True},
+			'create': {'read_only': True},
+			'is_serve': {'read_only': True},
+		}
 
-    def get_goods_name(self, obj):
-        return obj.[something]
+	def get_goods_name(self, obj):
+		return obj.[something]
 ```
 
 ## api.py
@@ -143,13 +145,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
 class MyOrderViewSet(mixins.RetrieveModelMixin,
-                     mixins.ListModelMixin,
-                     viewsets.GenericViewSet):
-    queryset = Party.objects.all()
-    serializer_class = MyOrderSerializer
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ['party_name', ]
-    filterset_fields = ['is_active', ]
+					 mixins.ListModelMixin,
+					 viewsets.GenericViewSet):
+	queryset = Party.objects.all()
+	serializer_class = MyOrderSerializer
+	filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+	search_fields = ['party_name', ]
+	filterset_fields = ['is_active', ]
 ```
 
 ## urls.py (application)
@@ -166,7 +168,7 @@ router.register('[path with no /]', [viewset class])
 app_name = '[app name]'
 
 urlpatterns = [
-		path('', include(router.urls)),
+	path('', include(router.urls)),
 ]
 ```
 
@@ -195,10 +197,10 @@ pip install djongo
 
 ```python
 INSTALLED_APPS = [    
-		'[app name]',
-		'rest_framework',    
-		'django_filters',    
-		...
+	'[app name]',
+	'rest_framework',    
+	'django_filters',    
+	...
 ]
 ```
 
@@ -209,13 +211,13 @@ to s3 [database](https://testdriven.io/blog/storing-django-static-and-media-file
 ```python
 # up to use case
 DATABASES = {    
-		'default': {        
-				'ENGINE': 'djongo',        
-				'NAME': '[mongoDB database name]',    
-		}
+	'default': {        
+		'ENGINE': 'djongo',        
+		'NAME': '[mongoDB database name]',    
+	}
 }
 
-DATABASES['default'] = dj_database_url.config(default='postgres://xqjsfkoftoijgh:5f2d45c1a1307ab56d27ead6c49e8fb22741f4db58035eae937bc115154b5566@ec2-3-208-224-152.compute-1.amazonaws.com:5432/d6cs0ofkk8oscp')
+DATABASES['default'] = dj_database_url.config(default='[url]')
 ```
 
 ### STATIC AND MEDIA
@@ -224,7 +226,7 @@ DATABASES['default'] = dj_database_url.config(default='postgres://xqjsfkoftoijgh
 STATIC_URL = '/static/'
 STATIC_ROOT_PATH = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [    
-		os.path.join(BASE_DIR, '[ชื่อ project]/static/')
+	os.path.join(BASE_DIR, '[ชื่อ project]/static/')
 ]
 
 MEDIA_URL = '/media/'
@@ -235,7 +237,7 @@ MEDIA_ROOT_PATH = os.path.join(BASE_DIR, 'media')
 
 ```python
 MIDDLEWARE = [    
-		'whitenoise.middleware.WhiteNoiseMiddleware',    
+	'whitenoise.middleware.WhiteNoiseMiddleware',    
     ...
 ]
 ```
@@ -244,24 +246,24 @@ MIDDLEWARE = [
 
 ```python
 SIMPLE_JWT = {    
-		'ACCESS_TOKEN_LIFETIME': timedelta(minutes=100000),    
-		'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    
-		'ROTATE_REFRESH_TOKENS': False,    
-		'BLACKLIST_AFTER_ROTATION': True,    
-		'ALGORITHM': 'HS512',    
-		'SIGNING_KEY': SECRET_KEY,    
-		'VERIFYING_KEY': None,    
-		'AUDIENCE': None,    
-		'ISSUER': None,    
-		'AUTH_HEADER_TYPES': ('Bearer',),    
-		'USER_ID_FIELD': 'id',    
-		'USER_ID_CLAIM': 'user_id',    
-		'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),    
-		'TOKEN_TYPE_CLAIM': 'token_type',    
-		'JTI_CLAIM': 'jti',    
-		'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',    
-		'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),    
-		'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+	'ACCESS_TOKEN_LIFETIME': timedelta(minutes=100000),    
+	'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    
+	'ROTATE_REFRESH_TOKENS': False,    
+	'BLACKLIST_AFTER_ROTATION': True,    
+	'ALGORITHM': 'HS512',    
+	'SIGNING_KEY': SECRET_KEY,    
+	'VERIFYING_KEY': None,    
+	'AUDIENCE': None,    
+	'ISSUER': None,    
+	'AUTH_HEADER_TYPES': ('Bearer',),    
+	'USER_ID_FIELD': 'id',    
+	'USER_ID_CLAIM': 'user_id',    
+	'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),    
+	'TOKEN_TYPE_CLAIM': 'token_type',    
+	'JTI_CLAIM': 'jti',    
+	'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',    
+	'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),    
+	'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 ```
 
@@ -269,15 +271,15 @@ SIMPLE_JWT = {
 
 ```python
 REST_FRAMEWORK = {    
-		'DEFAULT_FILTER_BACKENDS': [        
-				'django_filters.rest_framework.DjangoFilterBackend',    
-		],    
-		'DEFAULT_AUTHENTICATION_CLASSES': [        
-				'rest_framework_simplejwt.authentication.JWTAuthentication',    
-		],    
-		'DEFAULT_PERMISSION_CLASSES': [        
-				'rest_framework.permissions.IsAuthenticated',    
-		],
+	'DEFAULT_FILTER_BACKENDS': [        
+		'django_filters.rest_framework.DjangoFilterBackend',    
+	],    
+	'DEFAULT_AUTHENTICATION_CLASSES': [        
+		'rest_framework_simplejwt.authentication.JWTAuthentication',    
+	],    
+	'DEFAULT_PERMISSION_CLASSES': [        
+		'rest_framework.permissions.IsAuthenticated',    
+	],
 }
 ```
 
@@ -294,15 +296,15 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from decouple import config
 
 urlpatterns = [    
-		path(config('ADMIN_PATH'), admin.site.urls),    
-		path('login/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),    
-		path('login/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),    
-		# app url    
-		path('app/', include('board.api.urls')),
+	path(config('ADMIN_PATH'), admin.site.urls),    
+	path('login/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),    
+	path('login/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),    
+	# app url    
+	path('app/', include('board.api.urls')),
 ] 
 
 if settings.DEBUG:
-		urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+	urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 ```
 
 ### in case of above nothing to serve static file
@@ -315,14 +317,13 @@ from django.views.static import serve
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [    
-		path('admin/', admin.site.urls),    
-		path('login/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),    
-		path('login/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),    
-		# app url    
-		path('board/', include('board.api.urls')),    
-		path('profile/', include('account.api.urls')),    
-		re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),    
-		re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
+	path('admin/', admin.site.urls),    
+	path('login/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),    
+	path('login/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),    
+	# app url    
+	path('board/', include('board.api.urls')),        
+	re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),    
+	re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
 ]
 ```
 
