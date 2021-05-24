@@ -267,6 +267,34 @@ SIMPLE_JWT = {
 }
 ```
 
+#### in case of custome token
+
+Token.py
+
+```python
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+	@classmethod
+	def get_token(cls, user):
+		token = super().get_token(user)
+
+		# Add custom claims
+		token['name'] = user.name
+		# ...
+
+		return token
+
+class MyTokenObtainPairView(TokenObtainPairView):
+	serializer_class = MyTokenObtainPairSerializer
+```
+
+urls.py
+
+```python
+
+	path('login/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('login/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+```
+
 ### RESR_FRAMEWORK
 
 ```python
