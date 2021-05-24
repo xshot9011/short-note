@@ -108,6 +108,68 @@ class ListAdmin(admin.ModelAdmin):
 	list_filter = ['board_name']  # there are many field just google
 ```
 
+## serializers.py
+
+```python
+from rest_framework import serializers
+
+class OrderSerializer(serializers.ModelSerializer):
+		party_id = serializers.IntegerField(min_value=1, write_only=True)
+    goods_name = serializers.SerializerMethodField('get_goods_name')
+
+    class Meta:
+        model = OrderItem
+        fields = ['party_id', 'goods_id', 'order_qty', 'price_unit', 'order_price', 'is_serve', 'created',
+                  'goods_name']
+        extra_kwargs = {
+            'price_unit': {'read_only': True},
+            'order_price': {'read_only': True},
+            'create': {'read_only': True},
+            'is_serve': {'read_only': True},
+        }
+
+    def get_goods_name(self, obj):
+        return obj.[something]
+```
+
+## api.py
+
+```python
+from rest_framework import viewsets, status, mixins
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.decorators import action
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
+
+class MyOrderViewSet(mixins.RetrieveModelMixin,
+                     mixins.ListModelMixin,
+                     viewsets.GenericViewSet):
+    queryset = Party.objects.all()
+    serializer_class = MyOrderSerializer
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    search_fields = ['party_name', ]
+    filterset_fields = ['is_active', ]
+```
+
+## urls.py (application)
+
+```python
+from django.urls import path, include
+from rest_framework import routers
+from .api import [viewset class]
+
+router = routers.DefaultRouter()
+router.register('[path with no /]', [viewset class])
+...
+
+app_name = '[app name]'
+
+urlpatterns = [
+		path('', include(router.urls)),
+]
+```
+
 # Basic Setting up
 
 ## Pre-require library
@@ -181,53 +243,87 @@ MIDDLEWARE = [
 ### JWT
 
 ```python
-SIMPLE_JWT = {    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=100000),    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    'ROTATE_REFRESH_TOKENS': False,    'BLACKLIST_AFTER_ROTATION': True,    'ALGORITHM': 'HS512',    'SIGNING_KEY': SECRET_KEY,    'VERIFYING_KEY': None,    'AUDIENCE': None,    'ISSUER': None,    'AUTH_HEADER_TYPES': ('Bearer',),    'USER_ID_FIELD': 'id',    'USER_ID_CLAIM': 'user_id',    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),    'TOKEN_TYPE_CLAIM': 'token_type',    'JTI_CLAIM': 'jti',    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),}
+SIMPLE_JWT = {    
+		'ACCESS_TOKEN_LIFETIME': timedelta(minutes=100000),    
+		'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    
+		'ROTATE_REFRESH_TOKENS': False,    
+		'BLACKLIST_AFTER_ROTATION': True,    
+		'ALGORITHM': 'HS512',    
+		'SIGNING_KEY': SECRET_KEY,    
+		'VERIFYING_KEY': None,    
+		'AUDIENCE': None,    
+		'ISSUER': None,    
+		'AUTH_HEADER_TYPES': ('Bearer',),    
+		'USER_ID_FIELD': 'id',    
+		'USER_ID_CLAIM': 'user_id',    
+		'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),    
+		'TOKEN_TYPE_CLAIM': 'token_type',    
+		'JTI_CLAIM': 'jti',    
+		'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',    
+		'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),    
+		'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+}
 ```
 
 ### RESR_FRAMEWORK
 
 ```python
-REST_FRAMEWORK = {    'DEFAULT_FILTER_BACKENDS': [        'django_filters.rest_framework.DjangoFilterBackend',    ],    'DEFAULT_AUTHENTICATION_CLASSES': [        'rest_framework_simplejwt.authentication.JWTAuthentication',    ],    'DEFAULT_PERMISSION_CLASSES': [        'rest_framework.permissions.IsAuthenticated',    ],}
-```
-
-### basic simple jwt
-
-```
-SIMPLE_JWT = {    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=100000),    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    'ROTATE_REFRESH_TOKENS': False,    'BLACKLIST_AFTER_ROTATION': True,    'ALGORITHM': 'HS512',    'SIGNING_KEY': SECRET_KEY,    'VERIFYING_KEY': None,    'AUDIENCE': None,    'ISSUER': None,    'AUTH_HEADER_TYPES': ('Bearer',),    'USER_ID_FIELD': 'id',    'USER_ID_CLAIM': 'user_id',    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),    'TOKEN_TYPE_CLAIM': 'token_type',    'JTI_CLAIM': 'jti',    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),}
+REST_FRAMEWORK = {    
+		'DEFAULT_FILTER_BACKENDS': [        
+				'django_filters.rest_framework.DjangoFilterBackend',    
+		],    
+		'DEFAULT_AUTHENTICATION_CLASSES': [        
+				'rest_framework_simplejwt.authentication.JWTAuthentication',    
+		],    
+		'DEFAULT_PERMISSION_CLASSES': [        
+				'rest_framework.permissions.IsAuthenticated',    
+		],
+}
 ```
 
 ## Step2: urls.py
 
-## step 3:
+### in case of serving static file by web server
 
-### urls.py
+```python
+from django.contrib import admin
+from django.urls import path, include
+from django.conf.urls.static import static
+from django.conf import settings
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from decouple import config
 
-```
-from django.contrib import adminfrom django.urls import path, includefrom django.conf.urls.static import staticfrom django.conf import settingsfrom rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshViewurlpatterns = [    path('admin/', admin.site.urls),    path('login/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),    path('login/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),    # app url    path('app/', include('board.api.urls')),] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-```
+urlpatterns = [    
+		path(config('ADMIN_PATH'), admin.site.urls),    
+		path('login/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),    
+		path('login/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),    
+		# app url    
+		path('app/', include('board.api.urls')),
+] 
 
-### ถ้าไม่มี web server คอยจัดการ static content
-
-```
-from django.contrib import adminfrom django.urls import path, include, re_pathfrom django.conf import settingsfrom django.views.static import servefrom rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshViewurlpatterns = [    path('admin/', admin.site.urls),    path('login/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),    path('login/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),    # app url    path('board/', include('board.api.urls')),    path('profile/', include('account.api.urls')),    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),    re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),]
-```
-
-### serializers.py
-
-```
-from rest_framework import serializersclass OrderSerializer(serializers.ModelSerializer):    party_id = serializers.IntegerField(min_value=1, write_only=True)    goods_name = serializers.SerializerMethodField('get_goods_name')    class Meta:        model = OrderItem        fields = ['party_id', 'goods_id', 'order_qty', 'price_unit', 'order_price', 'is_serve', 'created',                  'goods_name']        extra_kwargs = {            'price_unit': {'read_only': True},            'order_price': {'read_only': True},            'create': {'read_only': True},            'is_serve': {'read_only': True},        }    def get_goods_name(self, obj):        return obj.[something]
-```
-
-### api.py
-
-```
-from rest_framework import viewsets, status, mixinsfrom rest_framework.response import Responsefrom rest_framework.views import APIViewfrom rest_framework.decorators import actionfrom django_filters.rest_framework import DjangoFilterBackendfrom rest_framework import filtersclass MyOrderViewSet(mixins.RetrieveModelMixin,                     mixins.ListModelMixin,                     viewsets.GenericViewSet):    queryset = Party.objects.all()    serializer_class = MyOrderSerializer    filter_backends = [filters.SearchFilter, DjangoFilterBackend]    search_fields = ['party_name', ]    filterset_fields = ['is_active', ]
+if settings.DEBUG:
+		urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 ```
 
-### urls.py
+### in case of above nothing to serve static file
 
-```
-from django.urls import path, includefrom rest_framework import routersfrom .api import [viewset class]......router = routers.DefaultRouter()router.register('[path with no /]', [viewset class])app_name = '[app name]'......urlpatterns = [    path('', include(router.urls)),]
+```python
+from django.contrib import admin
+from django.urls import path, include, re_path
+from django.conf import settings
+from django.views.static import serve
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+urlpatterns = [    
+		path('admin/', admin.site.urls),    
+		path('login/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),    
+		path('login/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),    
+		# app url    
+		path('board/', include('board.api.urls')),    
+		path('profile/', include('account.api.urls')),    
+		re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),    
+		re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
+]
 ```
 
 # deploy on heroku
@@ -238,7 +334,7 @@ follow on youtube
 
 ## 2. add heorku remote to git
 
-```
+```bash
 heroku create
 ```
 
@@ -246,37 +342,39 @@ get the remote repo’s heroku
 
 ## 3. install requirement
 
-```
+```bash
 pip install dj-database-urlpip freeze > requirements.txt
 ```
 
 ## 4. add more file
 
-name: Procfile
+filename: Procfile
 
 ```
-# in Profile
 web gunicorn [project].wsgi --log-file -
 ```
 
-name: runtime.txt
+filename: runtime.txt
 
 ```
-# in runtime.txt
 python-3.7.3
 ```
 
 ## 5. set up settings
 
-```
-import dj_database_urlDEBUG = FalseALLOWED_HOST = ['*']STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')STATIC_URL = '/static/'
+```python
+DEBUG = False
+ALLOWED_HOST = ['*']
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
 ```
 
 ## 6. connect free database on heroku
 
 heroku not allow you to use sqlite on server so you need to use others, providing by heroku
 
-```
+```bash
 heroku addons:create heroku-postgresql:hobby-dev
 ```
 
@@ -284,12 +382,26 @@ go to heroku url in your application app > setting > config var > create new con
 
 you will notice DATABASE_URL >>> [some url] copy it !
 
-```
-# in settings.pyimport dj_database_url...DATABASES = {    ...}# put it belowDATABASES['default'] = dj_database_url.config(default='[some url]')
+```python
+# in settings.py
+import dj_database_url
+
+...
+DATABASES = {    
+	...
+}
+# put it below
+DATABASES['default'] = dj_database_url.config(default='[some url]')
 ```
 
 ## 7. push it to server
 
 ```
-git add *git commit -m "deploy"git push origin masterheroku config:set DISABLE_COLLECTSSTATIC=1git push heroku masterheroku run python manage.py migrateheroku run python manage.py createsuperuser
+git add .
+git commit -m "deploy"
+git push origin master
+heroku config:set DISABLE_COLLECTSSTATIC=1
+git push heroku master
+heroku run python manage.py migrate
+heroku run python manage.py createsuperuser
 ```
