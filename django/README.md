@@ -2,6 +2,19 @@
 
 # Important Part
 
+## removing migration file
+
+1. run
+
+```bash
+find . -path “*/migrations/*.py” -not -name “__init__.py” -delete
+find . -path “*/migrations/*.pyc” -delete
+```
+
+2. drop database
+
+3. re-make migrations and migrate
+
 ## Common command
 
 ```bash
