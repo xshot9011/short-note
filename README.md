@@ -24,3 +24,20 @@ EOL
 cat ./.kube/config
 > the msg will appear here 
 ```
+
+## git using ssh
+
+```bash
+ssh-keygen
+cat ~/.ssh/id_rsa.pub
+```
+
+then copy public key and attach to github repo or account
+
+```bash
+git config --global user.name "<your name>"
+git config --global user.email "<your email>"
+git remote set-url origin <ssh git url>
+# now test connection
+git push
+```
