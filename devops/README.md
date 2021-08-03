@@ -1,3 +1,36 @@
+# Kubernetes KB
+
+## alias command
+
+```bash
+source <(kubectl completion zsh)
+```
+
+## Debuging
+
+### Port-forward
+
+```bash
+kubectl port-forward service/<service_name> <host_port>:<service_port> -n <namespace>
+```
+
+then browse localhost:host_port
+
+### Debuging container
+
+- Copy running container 
+
+```
+kubectl debug myapp -it --copy-to=myapp-debug --container=myapp -- sh 
+```
+
+- Creating new container
+
+```
+kubectl run -it busybox --image=busybox --restart=Never -n <namespace>
+kubectl exec -it busybox -n <namespace> -- bash
+```
+
 # DevOps tool
 
 # Build Automation Tools
