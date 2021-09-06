@@ -20,6 +20,24 @@ zsh --version  # verify installtion
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 ```
 
+### Install plugin
+
+follow below instruction
+
+https://github.com/romkatv/powerlevel10k.git
+
+## SSH key gen
+
+```bash
+ssh-keygen -o -a 100 -t ed25519 -f ~/.ssh/id_ed25519 -C "<email_address>"
+```
+
+- -o : Save the private-key using the new OpenSSH format rather than the PEM format. Actually, this option is implied when you specify the key type as ed25519.
+- -a: It’s the numbers of KDF (Key Derivation Function) rounds. Higher numbers result in slower passphrase verification, increasing the resistance to brute-force password cracking should the private-key be stolen.
+- -t: Specifies the type of key to create, in our case the Ed25519.
+- -f: Specify the filename of the generated key file. If you want it to be discovered automatically by the SSH agent, it must be stored in the default `.ssh` directory within your home directory.
+- -C: An option to specify a comment. It’s purely informational and can be anything. But it’s usually filled with <login>@<hostname> who generated the key.
+
 # git command 
 
 ## ถ้าเกิดเผลอใส่ข้อมูลลงไปใน git แล้วอยากลบทิ้ง
