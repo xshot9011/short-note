@@ -1,3 +1,25 @@
+# Linux command
+
+using: MobaXTerm (program)
+
+## Install zsh 
+
+-> better playing with command line
+
+prerequisite
+
+```txt
+git
+curl or wget
+```
+
+```bash
+sudo apt-get update
+sudo apt-get install zsh
+zsh --version  # verify installtion
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+```
+
 # git command 
 
 ## ถ้าเกิดเผลอใส่ข้อมูลลงไปใน git แล้วอยากลบทิ้ง
