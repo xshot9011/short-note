@@ -20,11 +20,23 @@ zsh --version  # verify installtion
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 ```
 
-### Install plugin
+### 1. Install plugin
 
 follow below instruction
 
 https://github.com/romkatv/powerlevel10k.git
+
+### 2. Plugin Configuration
+
+inside folder plugin configuration in ~/.zshrz
+
+```txt
+...
+plugins=(git
+        kubectl
+        kubectlx)
+...
+```
 
 ## SSH key gen
 
