@@ -50,6 +50,16 @@ ssh-keygen -o -a 100 -t ed25519 -f ~/.ssh/id_ed25519 -C "<email_address>"
 - -f: Specify the filename of the generated key file. If you want it to be discovered automatically by the SSH agent, it must be stored in the default `.ssh` directory within your home directory.
 - -C: An option to specify a comment. It’s purely informational and can be anything. But it’s usually filled with <login>@<hostname> who generated the key.
 
+### To set defualt ssh-key
+
+```bash
+# inside ~/.ssh/config
+
+...
+IdentityFile /home/<user>/.ssh/<private_key>
+...
+```
+
 # git command 
 
 ## ถ้าเกิดเผลอใส่ข้อมูลลงไปใน git แล้วอยากลบทิ้ง
@@ -81,7 +91,7 @@ cat ./.kube/config
 
 ```bash
 ssh-keygen
-cat ~/.ssh/id_rsa.pub
+cat ~/.ssh/<public_key>
 ```
 
 then copy public key and attach to github repo or account
