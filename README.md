@@ -60,6 +60,12 @@ IdentityFile /home/<user>/.ssh/<private_key>
 ...
 ```
 
+## Remove service in linux
+
+```bash
+export service=YOUR_SERVICE_NAME; systemctl stop $service && systemctl disable $service && rm /etc/systemd/system/$service && rm /usr/lib/systemd/system/[servicename] && systemctl daemon-reload && systemctl reset-failed
+```
+
 # git command 
 
 ## ถ้าเกิดเผลอใส่ข้อมูลลงไปใน git แล้วอยากลบทิ้ง
