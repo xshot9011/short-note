@@ -2,7 +2,9 @@
 
 ## Prometheus
 
-![media](./media/monitoring/photo.jpg)
+### Single page version
+
+![prometheus](./media/monitoring/prometheus/photo.jpg)
 
 # About MYu
 
