@@ -22,3 +22,13 @@ each folder contains 2 file naming convention is
 ### Single page version
 
 ![prometheus](./media/monitoring/prometheus/photo.jpg)
+
+## Graylog
+
+### Single page version
+
+![graylog](./media/monitoring/graylog/photo.jpg)
+
+### Installation
+
+[README](./installation/monitoring/graylog/README.md)
