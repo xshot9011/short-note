@@ -152,6 +152,40 @@ Install follow by mobgodb documentation [here](https://docs.mongodb.com/v2.6/tut
 
 ## Deploy Mongodb Replicaset
 
+### We choose
+
+- Graylog 4.1
+- Elasticsearch 7.10
+- MongoDB 4.4.9
+- Oracle Java SE 8 (OpenJDK 8 also works; latest stable update is recommended)
+
+### Create keyfile
+
+If you don't use anthentication step, skip this section
+
+This keyfile will be used to authenticate the member in the deployment
+
+Only mongod instances with the correct keyfile can join replicaset
+
+1. Generate the key
+
+    ```bash
+    # generate key
+    openssl rand -base64 756 > <path_to_keyfile>
+    # change to owner readable only
+    chmod 400 <path_to_keyfile>
+    ```
+2. Copy the keyfile to all machine that run mongod and make sure that the keyfile are read only by user mongo
+
+    ```bash
+    # list the content of file
+    ls -al
+    # change owner to user mongodb
+    chown mongodb:mongodb <path_to_keyfile>
+    # change permission to user mongodb
+    chmod 400 <path_to_keyfile>
+    ```
+
 ### Install mongodb (normal)
 
 [Installation documentation](https://docs.mongodb.com/manual/installation/#std-label-tutorial-installation)
@@ -159,16 +193,15 @@ Install follow by mobgodb documentation [here](https://docs.mongodb.com/v2.6/tut
 ```bash
 # import public key used by package management system
 sudo apt-get install gnupg
-wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | sudo apt-key add -
+wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
 # Create list file with ubuntu version
 ## touch /etc/apt/sources.list.d/mongodb-org-4.4.list
 # Write package to file
-echo "deb [ arch=am
-d64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
 # Reload
 sudo apt-get update
 # Install mongodb
-sudo apt-get install mongodb-org=4.4.9
+sudo apt-get install mongodb-org --yes
 # Reload config
 sudo systemctl daemon-reload
 sudo systemctl enable mongod.service
@@ -176,22 +209,57 @@ sudo systemctl restart mongod.service
 sudo systemctl status mongod
 ```
 
-- Configuration for each mongodb
+### Install mongosh 
 
----
-not verify config below yet *****
---- 
-- Set replication.replSetName option to the replica set name. If your application connects to more than one replica set, each set must have a distinct name.
-- Set net.bindIp option to the hostname/ip or a comma-delimited list of hostnames/ips.
-- Set any other settings as appropriate for your deployment.
----
+- This can done by any host; we will use mongosh connect to mongod instance and initiate replicaset
+
+[Installation documentation](https://docs.mongodb.com/mongodb-shell/install/#std-label-mdb-shell-install)
+
+```bash
+# import public key used by package management system
+sudo apt-get install gnupg
+wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
+# Create list file with Ubuntu version focal
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
+# Reload local package
+sudo apt-get update
+# Install
+sudo apt-get install -y mongodb-mongosh
+```
+
+### Configuration for mongodb
+
+Copy the keyfile to machine that run mongod and make sure that the keyfile are read only by user mongo
+
+```bash
+# list the content of file
+ls -al
+# change owner to user mongodb
+sudo chown mongodb:mongodb <path_to_keyfile>
+# change permission to user mongodb
+sudo chmod 400 <path_to_keyfile>
+```
+
+host: localhost make mongodb only accept connection that are running on the same machine.
+
+When possible, use a logical DNS hostname instead of an ip address, particularly when configuring replica set members or sharded cluster members. The use of logical DNS hostnames avoids configuration changes due to ip address changes.
 
 1. via commandline
 
     ```bash
     # Bind IP to mongodb for accessing over network
+    # use , to seperate the host, lovcalhost = only access from that machine can connect to database
+    # mongod --bind_ip localhost,mv_ip address
     mongod --bind_ip localhost,<hostname(s)|IP_address(es)>
+    # Create replicaset
     mongod --replSet "rs0"
+    # If authentication is required
+    mongod --keyFile <path_to_keyfile>
+    ```
+
+    Then, verify the connection
+
+    ```bash
     mongosh --host <IP_address>
     ```
 
@@ -199,48 +267,170 @@ not verify config below yet *****
 
     ```conf
     ...
+    security:
+        keyFile: <path-to-keyfile>
+    ...
     replication:
-    replSetName: "rs0"
+        replSetName: "rs0"
     ...
     net:
-    bindIp: localhost,<hostname(s)|ip address(es)>
+        bindIp: localhost,<hostname(s)|ip address(es)>
     ...
     ```
+
     Then, start mongod with configuration file 
+
     ```bash
     mongod --config <path_to_configuration_file>
     ```
 
-### Install mongosh
-
-[Installation documentation](https://docs.mongodb.com/mongodb-shell/install/#std-label-mdb-shell-install)
+I'm not sure wheter we have to restart service or not, just restart nothing
 
 ```bash
-# import public key used by package management system
-sudo apt-get install gnupg
-wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | sudo apt-key add -
-# Create list file with Ubuntu version focal
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-5.0.list
-# Reload local package
-sudo apt-get update
-# Install
-sudo apt-get install -y mongodb-mongosh
+sudo systemctl daemon-reload
+sudo systemctl restart mongod.service
+sudo systemctl status mongod
 ```
 
-Verify connection to regodb replicaset *****
+### Initial replicaset mongodb
 
+Connect to mongod (one mongod instance only !) 
+
+```bash
+# Mongosh 
+mongosh "<mongodb://<host>:<port>, ...>/[?replicaSet=<replicaset name>]&[tls=<true|false>]" [--username <username>] [--authenticationDatabase <database>]
+# Service
+mongo
 ```
-mongosh "<mongodb://<host>:<port>, ...>/?replicaSet=<replicaset name>&[<tls>=<true|false>]" --username <username> --authenticationDatabase <database>
+
+from mongosh shell we wil initiate the replicaset
+
+```bash
+rs.initiate()
+
+rs.initiate( {
+   _id : "<replicaset_name>",
+   members: [
+      { _id: 0, host: <host1> },
+      { _id: 1, host: <host2> },
+      { _id: 2, host: <host3> }
+   ]
+})
+
+rs.conf()
+{
+   "_id" : "rs0",
+   "version" : 1,
+   "protocolVersion" : NumberLong(1),
+   "members" : [
+      {
+         "_id" : 0,
+         "host" : "mongodb0.example.net:27017",
+         "arbiterOnly" : false,
+         "buildIndexes" : true,
+         "hidden" : false,
+         "priority" : 1,
+         "tags" : {
+
+         },
+         "secondaryDelaySecs" : NumberLong(0),
+         "votes" : 1
+      },
+      {
+         "_id" : 1,
+         "host" : "mongodb1.example.net:27017",
+         "arbiterOnly" : false,
+         "buildIndexes" : true,
+         "hidden" : false,
+         "priority" : 1,
+         "tags" : {
+
+         },
+         "secondaryDelaySecs" : NumberLong(0),
+         "votes" : 1
+      },
+      {
+         "_id" : 2,
+         "host" : "mongodb2.example.net:27017",
+         "arbiterOnly" : false,
+         "buildIndexes" : true,
+         "hidden" : false,
+         "priority" : 1,
+         "tags" : {
+
+         },
+         "secondaryDelaySecs" : NumberLong(0),
+         "votes" : 1
+      }
+      
+   ],
+   "settings" : {
+      "chainingAllowed" : true,
+      "heartbeatIntervalMillis" : 2000,
+      "heartbeatTimeoutSecs" : 10,
+      "electionTimeoutMillis" : 10000,
+      "catchUpTimeoutMillis" : -1,
+      "getLastErrorModes" : {
+
+      },
+      "getLastErrorDefaults" : {
+         "w" : 1,
+         "wtimeout" : 0
+      },
+      "replicaSetId" : ObjectId("585ab9df685f726db2c6a840")
+   }
+}
+# To ensure that the replicaset has primary node
+rs.status()
 ```
 
-- Verify connection between replicaset
+### Create the user administrator
 
-    ```bash
-    # from host 1, do this with all associate host
-    mongosh --host host2 --port 27017
-    mongosh --host host3 --port 27017
-    ```
+If you don't use anthentication step, skip this section
 
+In mongosh shell
+
+note: passwordPrompt() allow the mongosh prompts for the password.
+
+```bash
+# Require minimum role for user "userAdminAnyDatabase"
+db.createUser()
+
+admin = db.getSiblingDB("admin")
+admin.createUser(
+  {
+    user: "fred",
+    pwd: passwordPrompt(), // or cleartext password
+    roles: [ { role: "userAdminAnyDatabase", db: "admin" } ]
+  }
+)
+```
+
+### Authenticate as user administrator and create the cluster administrator
+
+If you don't use anthentication step, skip this section
+
+Authenticate created user
+
+```bash
+mongosh -u "<created_username>" -p  --authenticationDatabase "admin"
+# Or in mongosh shell
+db.getSiblingDB("admin").auth("<created_username>", passwordPrompt()) 
+```
+
+Create cluster adminsitrator
+
+The clusterAdmin role grants access to replication operations, such as configuring the replica set.
+
+```bash
+db.getSiblingDB("admin").createUser(
+  {
+    "user" : "ravi",
+    "pwd" : passwordPrompt(),     // or cleartext password
+    roles: [ { "role" : "clusterAdmin", "db" : "admin" } ]
+  }
+)
+```
 
 ### After installation
 
