@@ -5,6 +5,13 @@
 - MongoDB 3.6, 4.0, 4.2 or 4.4
 - Oracle Java SE 8 (OpenJDK 8 also works; latest stable update is recommended)
 
+## We choose
+
+- Graylog 4.1
+- Elasticsearch 7.10
+- MongoDB 4.4
+- Oracle Java SE 8 (OpenJDK 8 also works; latest stable update is recommended)
+
 # Installation (single server version)
 
 - update and upgrade package
@@ -130,3 +137,114 @@ sudo systemctl graylog-server
 Now: you can access graylog via URL <ip_address>:<graylog_port>
 
 # Installation (ha version)
+
+## Overview Installation
+
+- keep all server time sync via some methods
+
+### Mongodb replica set
+
+Install follow by mobgodb documentation [here](https://docs.mongodb.com/v2.6/tutorial/deploy-replica-set-with-auth/)
+
+- You can create replicaset from stanalone mongodb [here](https://docs.mongodb.com/manual/tutorial/convert-standalone-to-replica-set/)
+- odd number of replica
+- provide authentication access to mongodb [here](https://docs.mongodb.com/v2.6/tutorial/deploy-replica-set-with-auth/)
+
+## Deploy Mongodb Replicaset
+
+### Install mongodb (normal)
+
+[Installation documentation](https://docs.mongodb.com/manual/installation/#std-label-tutorial-installation)
+
+```bash
+# import public key used by package management system
+sudo apt-get install gnupg
+wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | sudo apt-key add -
+# Create list file with ubuntu version
+## touch /etc/apt/sources.list.d/mongodb-org-4.4.list
+# Write package to file
+echo "deb [ arch=am
+d64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
+# Reload
+sudo apt-get update
+# Install mongodb
+sudo apt-get install mongodb-org=4.4.9
+# Reload config
+sudo systemctl daemon-reload
+sudo systemctl enable mongod.service
+sudo systemctl restart mongod.service
+sudo systemctl status mongod
+```
+
+- Configuration for each mongodb
+
+---
+not verify config below yet *****
+--- 
+- Set replication.replSetName option to the replica set name. If your application connects to more than one replica set, each set must have a distinct name.
+- Set net.bindIp option to the hostname/ip or a comma-delimited list of hostnames/ips.
+- Set any other settings as appropriate for your deployment.
+---
+
+1. via commandline
+
+    ```bash
+    # Bind IP to mongodb for accessing over network
+    mongod --bind_ip localhost,<hostname(s)|IP_address(es)>
+    mongod --replSet "rs0"
+    mongosh --host <IP_address>
+    ```
+
+2. via configuration file at /etc/mongod.conf
+
+    ```conf
+    ...
+    replication:
+    replSetName: "rs0"
+    ...
+    net:
+    bindIp: localhost,<hostname(s)|ip address(es)>
+    ...
+    ```
+    Then, start mongod with configuration file 
+    ```bash
+    mongod --config <path_to_configuration_file>
+    ```
+
+### Install mongosh
+
+[Installation documentation](https://docs.mongodb.com/mongodb-shell/install/#std-label-mdb-shell-install)
+
+```bash
+# import public key used by package management system
+sudo apt-get install gnupg
+wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | sudo apt-key add -
+# Create list file with Ubuntu version focal
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-5.0.list
+# Reload local package
+sudo apt-get update
+# Install
+sudo apt-get install -y mongodb-mongosh
+```
+
+Verify connection to regodb replicaset *****
+
+```
+mongosh "<mongodb://<host>:<port>, ...>/?replicaSet=<replicaset name>&[<tls>=<true|false>]" --username <username> --authenticationDatabase <database>
+```
+
+- Verify connection between replicaset
+
+    ```bash
+    # from host 1, do this with all associate host
+    mongosh --host host2 --port 27017
+    mongosh --host host3 --port 27017
+    ```
+
+
+### After installation
+
+1. Create the replica set
+2. Create database for graylog
+3. Create user with authorization to database (read, write)
+4. (optional) bind IP address for access over the network
