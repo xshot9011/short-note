@@ -8,7 +8,7 @@
 ## We choose
 
 - Graylog 4.1
-- Elasticsearch 7.10
+- Elasticsearch 7.10.2
 - MongoDB 4.4
 - Oracle Java SE 8 (OpenJDK 8 also works; latest stable update is recommended)
 
@@ -145,7 +145,7 @@ Now: you can access graylog via URL <ip_address>:<graylog_port>
 ### We choose
 
 - Graylog 4.1
-- Elasticsearch 7.10
+- Elasticsearch 7.10.2
 - MongoDB 4.4.9
 - Oracle Java SE 8 (OpenJDK 8 also works; latest stable update is recommended)
 
@@ -398,6 +398,7 @@ db.getSiblingDB("admin").createUser({"user": "big", "pwd": passwordPrompt(), rol
     ```
 3. Create user with authorization to database (readWrite, dbAdmin)
     ```bash
+    use <graylog_database_name>
     db.createUser(
       {
         user: "<graylog_username>",
@@ -416,7 +417,7 @@ db.getSiblingDB("admin").createUser({"user": "big", "pwd": passwordPrompt(), rol
     ```bash
     db.createUser({user: "<graylog_username>", pwd: "<graylog_password>", roles: [{ role: "readWrite", db: "<graylog_database_name>"},{role: "dbAdmin", db: "<graylog_database_name>" }]})
     # To verify
-    use admin
+    use <graylog_database_name>
     show collections
     ```
 4. Verify authentication
@@ -457,7 +458,6 @@ node.name: <description_node_name>  # up to the node
 network.host: <host_IP_address>  # node IP address
 discovery.seed_hosts: ["<host_IP_address>"] # master ip address
 cluster.initial_master_nodes: ["<master_node_name>"]  # master node name(s)
-discovery.zen.ping.unicast.hosts: ["<participant_IP_address>"]
 ...
 ```
 
@@ -492,3 +492,72 @@ curl 'http://<noed2>:9200/mybucket/post/_search?q=user:rahul&pretty=true'
 ### Note:
 
 If secure elasticsearch with user authentication [docs](https://www.elastic.co/guide/en/x-pack/5.4/xpack-security.html#preventing-unauthorized-access), need to tell graylog [docs](https://github.com/Graylog2/graylog2-server/blob/2.3.0-beta.1/misc/graylog.conf#L172-L178)
+
+## Deploy Graylog
+
+### Install graylog
+
+```bash
+wget https://packages.graylog2.org/repo/packages/graylog-4.1-repository_latest.deb
+sudo dpkg -i graylog-4.1-repository_latest.deb
+sudo apt update
+sudo apt install -y apt-transport-https openjdk-8-jre-headless uuid-runtime pwgen curl dirmngr
+```
+
+If you are using free graylog
+
+```bash
+sudo apt-get update && sudo apt-get install graylog-server
+```
+
+Else
+
+```bash
+sudo apt-get update && sudo apt-get install graylog-server graylog-enterprise-plugins graylog-integrations-plugins graylog-enterprise-integrations-plugins
+```
+
+### Config graylog
+
+First, generate password for graylog
+
+```bash
+# This is for password_secret in graylog
+echo "Password is: $(pwgen -N 1 -s 96)"
+echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | sha256sum | cut -d" " -f1
+```
+
+at: /etc/graylog/server/server.conf
+
+```conf
+password_secret = <password_above>
+root_password_sha2 = <hashed_password>
+is_master = true  # only 1 node another is false
+http_bind_address = <host_IP_address:9000>
+# # List of Elasticsearch hosts Graylog should connect to.
+elasticsearch_hosts = <http://[user:password@]<node_host>[:port]>, ...
+# Set the number of log messages to keep per index; it is recommended to have several smaller indices instead of larger ones.
+elasticsearch_max_docs_per_index = 20000000
+# The following parameter defines to have a total number of indices if this number is reached old index will be deleted.
+elasticsearch_max_number_of_indices = 20
+# Shards setting rely on the number of nodes in the particular Elasticsearch cluster. If you have only one node, set it as 1.
+elasticsearch_shards = 3
+# This setting defines the number of replicas for your indices. If you have only one node in the Elasticsearch cluster, then set it as 0.
+# I'm not sure so I  set it to 3
+elasticsearch_replicas = 3
+# See https://docs.mongodb.com/manual/reference/connection-string/ for details
+mongodb_uri = mongodb://USERNAME:PASSWORD@mongodb-node01:27017,mongodb-node02:27017,mongodb-node03:27017/graylog?replicaSet=rs01
+```
+
+Reload config
+
+```bash
+sudo systemctl restart graylog-server
+sudo systemctl enable graylog-server
+sudo systemctl status graylog-server
+```
+
+Read the log
+
+```bash
+sudo tail -f /var/log/graylog-server/server.log
+```
