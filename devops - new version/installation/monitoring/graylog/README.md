@@ -175,16 +175,6 @@ Only mongod instances with the correct keyfile can join replicaset
     # change to owner readable only
     chmod 400 <path_to_keyfile>
     ```
-2. Copy the keyfile to all machine that run mongod and make sure that the keyfile are read only by user mongo
-
-    ```bash
-    # list the content of file
-    ls -al
-    # change owner to user mongodb
-    chown mongodb:mongodb <path_to_keyfile>
-    # change permission to user mongodb
-    chmod 400 <path_to_keyfile>
-    ```
 
 ### Install mongodb (normal)
 
@@ -202,6 +192,11 @@ echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb
 sudo apt-get update
 # Install mongodb
 sudo apt-get install mongodb-org --yes
+```
+
+Reload service
+
+```bash
 # Reload config
 sudo systemctl daemon-reload
 sudo systemctl enable mongod.service
@@ -212,6 +207,9 @@ sudo systemctl status mongod
 ### Install mongosh 
 
 - This can done by any host; we will use mongosh connect to mongod instance and initiate replicaset
+
+note: We select only node1 will install this tool
+note: If you use "mongo" instead no need to install this tool
 
 [Installation documentation](https://docs.mongodb.com/mongodb-shell/install/#std-label-mdb-shell-install)
 
@@ -227,9 +225,9 @@ sudo apt-get update
 sudo apt-get install -y mongodb-mongosh
 ```
 
-### Configuration for mongodb
+### Copy the keyfile created above
 
-Copy the keyfile to machine that run mongod and make sure that the keyfile are read only by user mongo
+Copy the keyfile to all machine that run mongod and make sure that the keyfile are read only by user mongo
 
 ```bash
 # list the content of file
@@ -239,6 +237,10 @@ sudo chown mongodb:mongodb <path_to_keyfile>
 # change permission to user mongodb
 sudo chmod 400 <path_to_keyfile>
 ```
+
+### Configuration for mongodb
+
+For each mongod instance will have the same configurations as here
 
 host: localhost make mongodb only accept connection that are running on the same machine.
 
@@ -255,12 +257,6 @@ When possible, use a logical DNS hostname instead of an ip address, particularly
     mongod --replSet "rs0"
     # If authentication is required
     mongod --keyFile <path_to_keyfile>
-    ```
-
-    Then, verify the connection
-
-    ```bash
-    mongosh --host <IP_address>
     ```
 
 2. via configuration file at /etc/mongod.conf
@@ -292,9 +288,11 @@ sudo systemctl restart mongod.service
 sudo systemctl status mongod
 ```
 
-### Initial replicaset mongodb
+### Initial replicaset mongodb over localhost interface
 
-Connect to mongod (one mongod instance only !) 
+localhost interface is done when you already create first user account, so user account need to has permission to create others user account too
+
+Connect to mongod (one mongod instance only !!!!) 
 
 ```bash
 # Mongosh 
@@ -303,86 +301,24 @@ mongosh "<mongodb://<host>:<port>, ...>/[?replicaSet=<replicaset name>]&[tls=<tr
 mongo
 ```
 
-from mongosh shell we wil initiate the replicaset
-
-```bash
-rs.initiate()
-
-rs.initiate( {
-   _id : "<replicaset_name>",
-   members: [
-      { _id: 0, host: <host1> },
-      { _id: 1, host: <host2> },
-      { _id: 2, host: <host3> }
-   ]
-})
-
-rs.conf()
-{
-   "_id" : "rs0",
-   "version" : 1,
-   "protocolVersion" : NumberLong(1),
-   "members" : [
-      {
-         "_id" : 0,
-         "host" : "mongodb0.example.net:27017",
-         "arbiterOnly" : false,
-         "buildIndexes" : true,
-         "hidden" : false,
-         "priority" : 1,
-         "tags" : {
-
-         },
-         "secondaryDelaySecs" : NumberLong(0),
-         "votes" : 1
-      },
-      {
-         "_id" : 1,
-         "host" : "mongodb1.example.net:27017",
-         "arbiterOnly" : false,
-         "buildIndexes" : true,
-         "hidden" : false,
-         "priority" : 1,
-         "tags" : {
-
-         },
-         "secondaryDelaySecs" : NumberLong(0),
-         "votes" : 1
-      },
-      {
-         "_id" : 2,
-         "host" : "mongodb2.example.net:27017",
-         "arbiterOnly" : false,
-         "buildIndexes" : true,
-         "hidden" : false,
-         "priority" : 1,
-         "tags" : {
-
-         },
-         "secondaryDelaySecs" : NumberLong(0),
-         "votes" : 1
-      }
-      
-   ],
-   "settings" : {
-      "chainingAllowed" : true,
-      "heartbeatIntervalMillis" : 2000,
-      "heartbeatTimeoutSecs" : 10,
-      "electionTimeoutMillis" : 10000,
-      "catchUpTimeoutMillis" : -1,
-      "getLastErrorModes" : {
-
-      },
-      "getLastErrorDefaults" : {
-         "w" : 1,
-         "wtimeout" : 0
-      },
-      "replicaSetId" : ObjectId("585ab9df685f726db2c6a840")
-   }
-}
-# To ensure that the replicaset has primary node
-rs.status()
-```
+1. Initiate replicaset
+   ```bash
+   rs.initiate({
+      _id : "<replicaset_name>",
+      members: [
+         { _id: 0, host: "<host1:[port]>" },
+         { _id: 1, host: "<host2:[port]>" },
+         { _id: 2, host: "<host3:[port]>" }
+      ]
+   })
+   ```
+2. After that
+   ```bash
+   # Read config
+   rs.conf()
+   # To ensure that the replicaset has primary node
+   rs.status()
+   ```
 
 ### Create the user administrator
 
