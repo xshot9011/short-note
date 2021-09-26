@@ -335,7 +335,7 @@ db.createUser()
 admin = db.getSiblingDB("admin")
 admin.createUser(
   {
-    user: "fred",
+    user: "cluster-admin",
     pwd: passwordPrompt(), // or cleartext password
     roles: [ { role: "userAdminAnyDatabase", db: "admin" } ]
   }
@@ -361,7 +361,7 @@ The clusterAdmin role grants access to replication operations, such as configuri
 ```bash
 db.getSiblingDB("admin").createUser(
   {
-    "user" : "ravi",
+    "user" : "big",
     "pwd" : passwordPrompt(),     // or cleartext password
     roles: [ { "role" : "clusterAdmin", "db" : "admin" } ]
   }
@@ -370,7 +370,19 @@ db.getSiblingDB("admin").createUser(
 
 ### After installation
 
-1. Create the replica set
 2. Create database for graylog
+    [doc](https://docs.mongodb.com/v4.4/reference/method/db.createCollection/)
+    ```bash
+    db.createCollection("<database_name>")
+    ```
 3. Create user with authorization to database (read, write)
-4. (optional) bind IP address for access over the network
+    ```bash
+    db.createUser(
+      {
+        user: "<graylog_username>",
+        pwd: "<graylog_password>",
+        roles: [{ role: "readWrite", db: "<database_name>" }]
+      }
+    )
+    ```
+4. Verify authentication
