@@ -142,6 +142,13 @@ Now: you can access graylog via URL <ip_address>:<graylog_port>
 
 - keep all server time sync via some methods
 
+### We choose
+
+- Graylog 4.1
+- Elasticsearch 7.10
+- MongoDB 4.4.9
+- Oracle Java SE 8 (OpenJDK 8 also works; latest stable update is recommended)
+
 ### Mongodb replica set
 
 Install follow by mobgodb documentation [here](https://docs.mongodb.com/v2.6/tutorial/deploy-replica-set-with-auth/)
@@ -151,13 +158,6 @@ Install follow by mobgodb documentation [here](https://docs.mongodb.com/v2.6/tut
 - provide authentication access to mongodb [here](https://docs.mongodb.com/v2.6/tutorial/deploy-replica-set-with-auth/)
 
 ## Deploy Mongodb Replicaset
-
-### We choose
-
-- Graylog 4.1
-- Elasticsearch 7.10
-- MongoDB 4.4.9
-- Oracle Java SE 8 (OpenJDK 8 also works; latest stable update is recommended)
 
 ### Create keyfile
 
@@ -382,7 +382,7 @@ One line command
 db.getSiblingDB("admin").createUser({"user": "big", "pwd": passwordPrompt(), roles: [{"role": "clusterAdmin", "db": "admin"}]})
 ```
 
-### After above preparation
+### Create graylog accessment
 
 1. authenticate as admin to set up database for graylog
     ```bash
@@ -396,13 +396,16 @@ db.getSiblingDB("admin").createUser({"user": "big", "pwd": passwordPrompt(), rol
     use admin
     show collections
     ```
-3. Create user with authorization to database (read, write)
+3. Create user with authorization to database (readWrite, dbAdmin)
     ```bash
     db.createUser(
       {
         user: "<graylog_username>",
         pwd: "<graylog_password>",
-        roles: [{ role: "readWrite", db: "<graylog_database_name>" }]
+        roles: [
+          { role: "readWrite", db: "<graylog_database_name>" },
+          { role: "dbAdmin", db: "<graylog_database_name>" }
+        ]
       }
     )
     # To verify
@@ -411,7 +414,7 @@ db.getSiblingDB("admin").createUser({"user": "big", "pwd": passwordPrompt(), rol
     ```
     One line command
     ```bash
-    db.createUser({user: "<graylog_username>", pwd: "<graylog_password>", roles: [{ role: "readWrite", db: "<graylog_database_name>"}]})
+    db.createUser({user: "<graylog_username>", pwd: "<graylog_password>", roles: [{ role: "readWrite", db: "<graylog_database_name>"},{role: "dbAdmin", db: "<graylog_database_name>" }]})
     # To verify
     use admin
     show collections
@@ -423,3 +426,16 @@ db.getSiblingDB("admin").createUser({"user": "big", "pwd": passwordPrompt(), rol
     use graylogs
     show collections
     ```
+
+## Deploy elasticsearch cluster
+
+###
+
+### Note:
+
+It is important to name the Elasticsearch cluster not simply named elasticsearch to avoid accidental conflicts with Elasticsearch nodes using the default configuration. Just choose anything else (we recommend graylog), because this is the default name and any Elasticsearch instance that is started in the same network will try to connect to this cluster.
+
+network.host to open access over the network
+discovery.zen.ping.unicast.hosts -> participant of cluster
+
+If secure elasticsearch with user authentication [docs](https://www.elastic.co/guide/en/x-pack/5.4/xpack-security.html#preventing-unauthorized-access), need to tell graylog [docs](https://github.com/Graylog2/graylog2-server/blob/2.3.0-beta.1/misc/graylog.conf#L172-L178)
