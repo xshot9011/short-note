@@ -277,7 +277,7 @@ When possible, use a logical DNS hostname instead of an ip address, particularly
     Then, start mongod with configuration file 
 
     ```bash
-    mongod --config <path_to_configuration_file>
+    sudo mongod --config <path_to_configuration_file>
     ```
 
 I'm not sure wheter we have to restart service or not, just restart nothing
@@ -312,6 +312,10 @@ mongo
       ]
    })
    ```
+   Example usage
+   ```bash
+   rs.initiate({_id : "<replicaset_name>",members: [{ _id: 0, host: "<host1:[port]>" },{ _id: 1, host: "<host2:[port]>" },{ _id: 2, host: "<host3:[port]>" }]})
+   ```
 2. After that
    ```bash
    # Read config
@@ -329,17 +333,26 @@ In mongosh shell
 note: passwordPrompt() allow the mongosh prompts for the password.
 
 ```bash
-# Require minimum role for user "userAdminAnyDatabase"
-db.createUser()
-
+# get getSiblingDB -> used to return another database without modifying the db variable in the shell environment.
 admin = db.getSiblingDB("admin")
+# Require minimum role for user "userAdminAnyDatabase"
 admin.createUser(
   {
-    user: "cluster-admin",
+    user: "admin-big",  # admin of database
     pwd: passwordPrompt(), // or cleartext password
-    roles: [ { role: "userAdminAnyDatabase", db: "admin" } ]
+    roles: [ 
+      { role: "userAdminAnyDatabase", db: "admin" }, 
+      { role: "root", db: "admin"}
+    ]
   }
 )
+```
+
+One line command
+
+```bash
+admin = db.getSiblingDB("admin")
+admin.createUser({user: "admin-big",pwd: passwordPrompt(), roles: [{role: "userAdminAnyDatabase", db: "admin"}, {role: "root", db: "admin"}]})
 ```
 
 ### Authenticate as user administrator and create the cluster administrator
@@ -349,6 +362,7 @@ If you don't use anthentication step, skip this section
 Authenticate created user
 
 ```bash
+# with mongosh shell
 mongosh -u "<created_username>" -p  --authenticationDatabase "admin"
 # Or in mongosh shell
 db.getSiblingDB("admin").auth("<created_username>", passwordPrompt()) 
@@ -368,12 +382,22 @@ db.getSiblingDB("admin").createUser(
 )
 ```
 
+One line command
+
+```bash
+db.getSiblingDB("admin").createUser({"user": "big", "pwd": passwordPrompt(), roles: [{"role": "clusterAdmin", "db": "admin"}]})
+```
+
 ### After installation
 
+1. authenticate as cluster admin to set up database for graylog
+    ```bash
+    mongosh -u "big" -p  --authenticationDatabase "admin" 
+    ```
 2. Create database for graylog
     [doc](https://docs.mongodb.com/v4.4/reference/method/db.createCollection/)
     ```bash
-    db.createCollection("<database_name>")
+    db.getSiblingDB("admin").createCollection("<graylog_database_name>")
     ```
 3. Create user with authorization to database (read, write)
     ```bash
@@ -381,8 +405,16 @@ db.getSiblingDB("admin").createUser(
       {
         user: "<graylog_username>",
         pwd: "<graylog_password>",
-        roles: [{ role: "readWrite", db: "<database_name>" }]
+        roles: [{ role: "readWrite", db: "<graylog_database_name>" }]
       }
     )
     ```
+    One line command
+    ```bash
+    db.createUser({user: "<graylog_username>", pwd: "<graylog_password>", roles: [{ role: "readWrite", db: "<graylog_database_name>"}]})
+    ```
 4. Verify authentication
+    ```bash
+    # Exit from above command line and login as graylog user to graylog database
+    mongosh -u "<graylog_username>" -p  --authenticationDatabase "<graylog_database_name>" 
+    ```
