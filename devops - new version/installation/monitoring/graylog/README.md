@@ -429,13 +429,66 @@ db.getSiblingDB("admin").createUser({"user": "big", "pwd": passwordPrompt(), rol
 
 ## Deploy elasticsearch cluster
 
-###
+### Install elasticsearch
 
-### Note:
+```bash
+# Add and install public key
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+# Add es to source list
+echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list
+# Reload
+sudo apt-get update
+# Install es
+sudo apt-get install elasticsearch=7.10.2
+```
+
+### Config elasticsearch
+
+***** Future add: authentication to elasticsearch
+
+Then, we will config es to access over the network at /etc/elasticsearch/elasticsearch.yml
 
 It is important to name the Elasticsearch cluster not simply named elasticsearch to avoid accidental conflicts with Elasticsearch nodes using the default configuration. Just choose anything else (we recommend graylog), because this is the default name and any Elasticsearch instance that is started in the same network will try to connect to this cluster.
 
-network.host to open access over the network
-discovery.zen.ping.unicast.hosts -> participant of cluster
+```yml
+...
+cluster.name: <cluster-name>  # the same
+node.name: <description_node_name>  # up to the node
+network.host: <host_IP_address>  # node IP address
+discovery.seed_hosts: ["<host_IP_address>"] # master ip address
+cluster.initial_master_nodes: ["<master_node_name>"]  # master node name(s)
+discovery.zen.ping.unicast.hosts: ["<participant_IP_address>"]
+...
+```
+
+You can show more log with deleting --quite in ExecStarts of systemd service
+
+Then, Reload configurations
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start elasticsearch
+sudo systemctl enable elasticsearch
+sudo systemctl status elasticsearch
+```
+
+### Verfify usage
+
+```bash
+# send data to node1 
+curl -XPUT 'http://<node1>:9200/mybucket/post/1' \
+-H 'Content-Type: application/json' \
+-d '
+{
+    "user": "rahul",
+    "postDate": "01-16-2015",
+    "body": "Adding Data in ElasticSearch Cluster" ,
+    "title": "ElasticSearch Cluster Test"
+}'
+# get data from node2
+curl 'http://<noed2>:9200/mybucket/post/_search?q=user:rahul&pretty=true'
+```
+
+### Note:
 
 If secure elasticsearch with user authentication [docs](https://www.elastic.co/guide/en/x-pack/5.4/xpack-security.html#preventing-unauthorized-access), need to tell graylog [docs](https://github.com/Graylog2/graylog2-server/blob/2.3.0-beta.1/misc/graylog.conf#L172-L178)
