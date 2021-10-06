@@ -6,7 +6,7 @@
 
 ### We choose
 
-- Graylog 4.1
+- Graylog 4.1.5
 - Elasticsearch 7.10.2
 - MongoDB 4.4.9
 - Oracle Java SE 8 (OpenJDK 8 also works; latest stable update is recommended)
