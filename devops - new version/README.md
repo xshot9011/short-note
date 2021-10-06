@@ -33,6 +33,10 @@ each folder contains 2 file naming convention is
 
 [README](./installation/monitoring/graylog/README.md)
 
+### Upgrade or downgrade
+
+[README](./installation/monitoring/graylog/upgrade.md)
+
 ### Recommendation
 
 ้heap memory -> more heap can use for filter and cacheing -> increate query performance

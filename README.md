@@ -54,10 +54,14 @@ ssh-keygen -o -a 100 -t ed25519 -f ~/.ssh/id_ed25519 -C "<email_address>"
 
 ```bash
 # inside ~/.ssh/config
-
-...
 IdentityFile /home/<user>/.ssh/<private_key>
-...
+```
+
+### chmod to current user in window
+
+```bash
+icacls .\<private_key> /inheritance:r
+icacls .\<private_key> /grant:r "%username%":"(R)"
 ```
 
 ## Remove service in linux
@@ -66,7 +70,7 @@ IdentityFile /home/<user>/.ssh/<private_key>
 export service=YOUR_SERVICE_NAME; systemctl stop $service && systemctl disable $service && rm -rf /etc/systemd/system/$service && rm -rf /usr/lib/systemd/system/$service && systemctl daemon-reload && systemctl reset-failed
 ```
 
-# git command 
+# git command
 
 ## ถ้าเกิดเผลอใส่ข้อมูลลงไปใน git แล้วอยากลบทิ้ง
 
@@ -100,12 +104,9 @@ ssh-keygen
 cat ~/.ssh/<public_key>
 ```
 
-then copy public key and attach to github repo or account
+Then copy public key and attach to github repo or account
 
 ```bash
-git config --global user.name "<your name>"
-git config --global user.email "<your email>"
-git remote set-url origin <ssh git url>
-# now test connection
-git push
+# connect to git repo
+ssh -vT git@github.com [-i <path_to_private_key>]
 ```
