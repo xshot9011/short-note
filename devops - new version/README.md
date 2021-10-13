@@ -51,3 +51,9 @@ export ES_HEAP_SIZE=10g
 ES_JAVA_OPTS="-Xms10g -Xmx10g" ./bin/elasticsearch
 # not more than 32 JVM cannot point above address
 ```
+
+## FluentBit
+
+### Single page version
+
+![FluentBit](./media/monitoring/fluentbit/photo.jpg)
