@@ -20,6 +20,46 @@ zsh --version  # verify installtion
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 ```
 
+## grep command
+
+grep <word>
+
+```bash
+# option
+## -c count the number of word
+## -w match all word
+## -n show line number 
+## -i ignore case matching
+## -l Displays list of a filenames(match gicen pattern) only .
+grep -l 'linux' <filename>, ...  # find file that contain "linux"
+# ^ the starting of the line, & the end of line
+grep '^kbuet'  # find kbuet at the beginning of the line
+grep '^&' # find the blank line
+# using . mean any char if you want to find . use \.
+grep 'k...t'  # find kxxxt
+# . is for 1 char; [<src_char[-dest_char]>...] is for set of matched char
+grep '[Gg][Gg][Ee][Zz]' # GGEZ, GgEZ, GGeZ, ... 
+grep 'LAB[1-9]_[A-Z]'  # lab[1-9]_[FOLLOW WITH LETTER A-Z]
+grep 'LAB[1-9]_[^A-Z]' # lab[1-9]_[NOT FOLLOW WITH LETTER A-Z]
+# match all entire word
+grep '\<k.l\>' # match all word start with k end with l
+# character classes
+## [[:alnum:]] – Alphanumeric characters.
+## [[:alpha:]] – Alphabetic characters
+## [[:blank:]] – Blank characters: space and tab.
+## [[:digit:]] – Digits: ‘0 1 2 3 4 5 6 7 8 9’.
+## [[:lower:]] – Lower-case letters: ‘a b c d e f g h i j k l m n o p q r s t u v w x y z’.
+## [[:space:]] – Space characters: tab, newline, vertical tab, form feed, carriage return, and space.
+## [[:upper:]] – Upper-case letters: ‘A B C D E F G H I J K L M N O P Q R S T U V W X Y Z’.
+# min max or len
+## {min}, {min,max}
+grep '[[:digit:]]{1,3}'  # find the digit with have len 1-3 ex. 000, 111, 929
+grep '[vV]{3}' # find set of [vV] with len 3  vVv or vvv or VVV ...
+# u can use 'OR' with \|
+grep '[[:digit:]]{1,3}\|word2'
+# and with grep ... | grep ... 
+```
+
 ### 1. Install plugin
 
 follow below instruction
