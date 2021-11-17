@@ -101,3 +101,59 @@ ES_JAVA_OPTS="-Xms10g -Xmx10g" ./bin/elasticsearch
 ทำให้สามารถเก็บผลลัพธ์จากระบบใหม่และ feature ใหม่ได้
 
 ทำให้ feature ของเรานั้นสามารถถูกทดลองได้แบบบน production เลย
+
+# Git
+
+## Git workflow
+
+เป็นรูปแบบการใช้งาน version control
+
+เมื่อเราดู ๆ ไป model มันจะคล้ายสิ่งที่เรียกว่า git flow เลยแต่อันนี้เป็นพื้นฐานว่าเราแตกแต่ละ branch ไว้ทำไม
+
+### 1. Simple branch
+
+มีหลาย ๆ คนช่วยกันรุมสะกำใช้งานกันในอันนี้เวลา merge ก็จะเบิ้ม ๆ หน่อย
+
+### 2. Feature branch
+
+มี branch ที่เพิ่มขึ้นมาก็คือ feature เวลาเพิ่มก็ใช้ feature เสร็จแล้ว merge เข้า master
+
+เวลา feature ใหญ่เกินไป branhc feature ก็นำไปยาววววเลย
+
+### 3. Develop branch
+
+มี branch ที่เพิ่มเข้ามาคือ feature และ develop ก็คือจะไม่ merge เข้า master อีกต่อไปถ้า feature เสร็จ
+
+### 4. Release branch 
+
+เป็นตัวที่ branch เพิ่มขึ้นมาจากข้อ 3 ก็คือ release branch จุดประสงค์ของมันก็เพื่อพัก feature ที่เขียนเสร็จแล้วก่อน เพื่อทดสอบตอนมันมารวมร่างกันจริง ๆ แล้วก็ดูว่าถงจุดที่เราต้อง release ของหรือยังก็จะค่อยปล่อยทีเดียวด้วยเหตุผลทางธุรกิจด้วย
+
+อารมณ์แบบเขียน feature เซ็นสัญญาเสร็จแล้วแต่ไม่มี feature ส่งมอบของให้กับลูกค้างี้
+
+## Git flow
+
+เป็น git extension 
+
+เวลาจะเขียนโค๊ดก็จะแบ่งตัว branch ออกเป็นหลัก ๆ 5 รูปแบบ
+
+```txt
+    |        |         |          |          |
+    |        |         |          |          |
+    |        |         |          |          |
+    |        |         |          |          |
+    |        |         |          |          |
+    |        |         |          |          |
+ feature  develop   release    master     hotfix  
+```
+
+- feature
+
+    เมื่ออยากสร้าง feature ใหม่ก็แตกออกจาก branch develop ออกมา ถ้าใช้งานเสร็จแล้วก็ merge กลับและลบ branch นั้นทิ้ง
+
+- release
+
+    เมื่อต้องการจะปล่อย feature ที่ develop ไปหนึ่งหรือหลาย ๆ อันก็จะทำการ แตก branch จาก develop ไปชื่อ release อาจจะมีการแก้ไขหรือเพิ่มการเตรียมพร้อมสำหรับ production เสร็จแล้วก็จะ merge กลับไปยัง develop และ master(แบบติด tag)
+
+- hotfix
+
+    ใช้สำหรับการปรับแก้สิ่งที่ไม่คาดคิดว่าจะเกิดขึ้นใน production version ก็เมื่อแก้ไขเสร็จแล้วก็จะทำการ merge กลับ master (ติด tag bugfix) และก็ develop
