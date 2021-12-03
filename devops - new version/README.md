@@ -1,11 +1,25 @@
 ### Folder structure
 
-we keep media file in media/... 
+We keep media file in media/... 
 
-each folder contains 2 file naming convention is
+Each folder contains 2 file naming convention is
 
 1. photo.jpg
 2. file.goodnotes
+
+---
+
+find incomplete coming soon section by "coming soon"
+
+---
+
+# DevSecOps
+
+[coming soon]
+
+## Day0, 1, 2 operation
+
+[coming soon]
 
 # CI/CD Tools
 
@@ -17,46 +31,61 @@ each folder contains 2 file naming convention is
 
 # Monitoring
 
-## Prometheus
+## Observability
 
-### Single page version
+1. Metrics
+2. Logs
+3. Traces
+4. Alert
 
-![prometheus](./media/monitoring/prometheus/photo.jpg)
+## Metrics
 
-## Graylog
+### Prometheus
 
-### Single page version
+- Single page version
 
-![graylog](./media/monitoring/graylog/photo.jpg)
+    ![prometheus](./media/monitoring/prometheus/photo.jpg)
 
-### Installation
+## Logs
 
-[README](./installation/monitoring/graylog/README.md)
+### Graylog
 
-### Upgrade or downgrade
+- Single page version
 
-[README](./installation/monitoring/graylog/upgrade.md)
+    ![graylog](./media/monitoring/graylog/photo.jpg)
 
-### Recommendation
+- Installation
 
-้heap memory -> more heap can use for filter and cacheing -> increate query performance
+    [README](./installation/monitoring/graylog/README.md)
 
-os file cache -> keep the hot segments resident in memory -> access faster
+- Upgrade or downgrade
 
-recommendtation = 50%(max(RAM))[elasticsearch] + 50%(max(RAM))[free]
+    [README](./installation/monitoring/graylog/upgrade.md)
 
-```bash
-export ES_HEAP_SIZE=10g
-# or
-ES_JAVA_OPTS="-Xms10g -Xmx10g" ./bin/elasticsearch
-# not more than 32 JVM cannot point above address
-```
+- Recommendation
 
-## FluentBit
+    ้heap memory -> more heap can use for filter and cacheing -> increate query performance
 
-### Single page version
+    os file cache -> keep the hot segments resident in memory -> access faster
 
-![FluentBit](./media/monitoring/fluentbit/photo.jpg)
+    recommendtation = 50%(max(RAM))[elasticsearch] + 50%(max(RAM))[free]
+
+    ```bash
+    export ES_HEAP_SIZE=10g
+    # or
+    ES_JAVA_OPTS="-Xms10g -Xmx10g" ./bin/elasticsearch
+    # not more than 32 JVM cannot point above address
+    ```
+
+### FluentBit
+
+- Single page version
+
+    ![FluentBit](./media/monitoring/fluentbit/photo.jpg)
+
+## Traces
+
+[coming soon]
 
 # Deployment
 
@@ -103,6 +132,10 @@ ES_JAVA_OPTS="-Xms10g -Xmx10g" ./bin/elasticsearch
 ทำให้ feature ของเรานั้นสามารถถูกทดลองได้แบบบน production เลย
 
 # Git
+
+## Git Ops
+
+[coming soon]
 
 ## Git workflow
 
