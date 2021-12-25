@@ -19,7 +19,206 @@ find incomplete coming soon section by "coming soon"
 
 ## 12 Factor Apps Methodology
 
-[coming soon]
+12 Factor เป็นวิธีการสร้าง Software as a service (SaaS)
+
+- การใช้ declarative สำหรับการทำ automation
+- ระบุ OS, Environment ที่ใช้งาน
+- หลักเลี่ยงการใช้งาน System administrator
+- ลดความต่างระหว่าง Environment เพื่อทำให้การทำ Continuous deployment ทำได้ง่ายขึ้น
+- ทำให้สามารถ Scale ได้ง่ายโดยไม่ต้องเปลี่ยนรูปแบบการทำงานของระบบอื่น ๆ
+
+ขอบคุณที่มา [12Factor](https://12factor.net/)
+
+### 1. Codebase
+
+`One codebase tracked in revision control, many deploys`
+
+App ที่ใช้หลักการ 12 Factor จะเก็บ source code ไว้ใน version control system เสมอจะเรียกรวมกันว่า "repo"
+
+Codebase คือ 1 repo หรืออะไรก็ตามที่ใช้ root commit ร่วมกัน
+
+```conf
+/-----------\               DEPLOY = instance of application
+|           |         /----------------\
+|           | ------> |   PRODUCTION   |
+|  CODEBASE |         \----------------/
+|           |         /----------------\
+|           | ------> |     STAGING    |
+\-----------/         \----------------/
+            \         /----------------\
+             \------> |   DEVELOPER1   |
+                      \----------------/
+```
+
+ความสัมพันธ์ของ Codebase กับ Application มีดังนี้
+- ถ้ามีมีหลาย Codebase สิ่งนั้นคือ Distributed system และแต่ละ Codebase คือ Application
+- Application ใช้ code ชุดเดียวกันสิ่งนั้นละเมิดต่อ 12 Factor ทางออกก็คือการทำ library กลางที่แต่ละ Application จะมาเรียกใช้งาน (Dependency manager)
+
+### 2. Dependencies
+
+`Explicitly declare and isolate dependencies`
+
+Application ที่ใช้ 12 Factor จะไม่ใช้งานตัว System-side package (ของที่อยู่บนเครื่อง) แต่จะใช้งานแค่ตัวที่ถูกกำหนดไว้ใน Dependency declaration manifest ของมันและจะใช้งานร่วมกันกับ Dependency isolation tool ระหว่างการทำงานใน Deploy ต่าง ๆ
+
+ประโยชน์ของการทำ Explicit depencdency คือการที่ developer คนใหม่เข้ามาใช้งานและตั้งค่าต่อได้ง่ายขึ้น โดยต้องการแค่ภาษาและ Depencency mamager และทำการ set up ด้วยคำสั่ง `build command` (pip install -r <file.txt>) 
+
+### 3. Config
+
+`Store config in the environment`
+
+Application config คือของที่จะแตกต่างกันระหว่าง deploy ต่าง ๆ เช่น Staging, production
+- database, memcached, [backing services](###4.-Backing-services)
+- credential ที่ใช้สำหรับ 3rd party
+- per-deploy หรือค่าที่ใช้ในการแยก deploy {dev, uat, pre-prod, prod} แต่ละชนิดออกจากกันเช่น hostname
+
+การเก็บ Config ของ Application ไว้แบบค่าคงที่อย่าหาทำให้กำหนดไว้แยกกันหรือเก็บไว้ใน Config แยกที่ไม่ถูกเก็บใน Revision control ในรูปแบบของ Environment
+
+ทำให้สามารถกำหนดค่าแยกกันแต่ละ Deploy ได้โดยไม่ต้องเปลี่ยน Code
+
+### 4. Backing services
+
+`Treat backing services as attached resources`
+
+```conf
+                /----------------\
+                |   PRODUCTION   |
+                \----------------/
+                /                \
+               / Backing Services \
+         _____/_____          _____\_____
+        /     S3    \        / POSTGRESQL \
+       |_____________|      |_____________|
+```
+
+Backing services คือของที่ application เราใช้งานผ่าน network และเป็นส่วนหนึ่งของการทำงานของ app 
+- Datastore ex. MySQL, CouchDB
+- Messaging/queueing ex. RabbitMQ, Beanstalkd
+- Email ex. Postfix
+- Caching systems ex Memcached
+
+backing services อาจจะใช้งานทั้ง locally-managed services หรือไปใช้งาน 3rd party app ได้เหมือนกันเช่น Amazon S3 หรือพวก API-accessible consumer ex. Twitter, Google map
+
+หลักการของ 12 Factors ก็คือ application ของเราจะไม่มีการเปลี่ยนแปลง (code)เมื่อย้ายการใช้งานระหว่าง third-party กับ local services
+
+เช่น พวก URL, credential จะถูกแก้ไขผ่าน [Config](###3.-Config) เท่านั้น
+
+เราจะมอง Backing services เป็น resource ต่อ 1 service ของมัน 12 Factors มอง resource เหล่านี้ว่าเป็นของที่มา attached (เกี่ยว) สามารถเปลี่ยนเมื่อไหรก็ได้ -> loose coupling
+
+### 5. Build, release, run
+
+`Strictly separate build and run stages`
+
+```conf
+/-----------\               DEPLOY = instance of application
+|           |   v1    |----------------\
+|           | ------> |      BUILD     |         ___________
+|  CODEBASE |         |________________| \      |           |
+|           |                             ├────>|  RELEASE  |
+|           |                            /      |___________|
+\-----------/         |----------------\
+                      |     CONFIG     |
+                      |________________|
+```
+
+[Codebase](###1.-Codebase) ถูกเปลี่ยนไปเป็น non-development deploy ด้วย 3 ขั้นตอน
+1. `build stage` การเอา code repo ณเวอร์ชั่นที่กำหนดมา build (compile dependency)
+2. `release stage` เอาของที่ได้จาก build stage มารวมกับ config ของ deploy ทำให้สามารถใช้งานได้
+3. `run stage` หรือเรียกอีกชื่อว่า runtime stage
+
+พวก Tool ที่เกี่ยวข้องกับการ Deployment มักจะมี Release management tools ติดมาด้วยเพื่อให้สามารถทำการ Rollback กลับไปยัง version ก่อนหน้าได้ง่ายขึ้น
+
+แต่ละ Release ของมี ID + Timestamp เป็นของตัวเอง จะไม่มีการแก้ไข Release นั้น ๆ แต่จะเป็นการปล่อย Release (แก้ code แหละ) ที่แก้ไขแล้วออกมาแทน
+
+### 6. Processes
+
+`Execute the app as one or more stateless processes`
+
+Application ที่ถูกเขียนด้วย 12 Factor จะเป็น stateless process และไม่มีการใช้งานร่วมกันเช่น memory หรือ storage กับ process อื่นโดยข้อมูลที่จะต้องจัดเก็บและเรียกใช้งานทีหลังจะถูกเก็[ไว้ใน [Backing service](###4.-Backing-services)
+
+Memory space, file system สามารถถูกใช้งานได้แปปหนึ่ง (cache) แต่ 12 Factor นั้นมองว่าของที่ cache เหล่านั้นหน่ะเดี่ยวแม่งก็หายไปในอนาคตเผลอ ๆ process ที่ทำงานอยู่นี้เองแหละที่จะหายไปจาก computer เครื่องนี้อาจจะไปอยู่บน node อื่นแทน
+
+เช่น พวกที่ rely on session แบบ user ต้องถูก route กลับมาที่เก่า (process) ไรงี้ก็หาที่เก็บ Session state เช่นพวก Redis, memcachhed แทนก็ได้
+
+### 7. Port binding
+
+`Export services via port binding`
+
+ในการ Deploymeny จะมีการ routing ตัว public-facing hostname ไปยัง port ของ web server ที่ทำงานอยู่ข้างในอีกที ทำให้ Application หนึ่งสามารถกลายเป็น Backing service ของอีก Application หนึ่งได้เลย
+
+### 8. Concurrency
+
+`Scale out via the process model`
+
+Web application มีหลายรูปแบบมากในการทำงานเช่น PHP อาจจะทำงานเป็น Child process ของ Apache webserver อีกทีขยายเพิ่มหรือลดตามความต้องการใช้งานของ Application นั้น ๆ, JAVA จะจองทรัพยากรเป็นก้อนในขณะที่ทำการ start up ตัวเอง --> ในมุมมอง Dev ก็คือ 1 Application
+
+การนำ [Unix process model](https://adam.herokuapp.com/past/2011/5/9/applying_the_unix_process_model_to_web_apps/) มาใช้กับ Web application จะมี 2 อย่างที่ควรรู้คือ
+1. Process type: ชนิดของ process เอาไว้แยกการทำงาน "Class" ก็ได้ใน OOP เช่น web ก็มีหน้าที่สำหรับการจัดการ HTTP request ที่เข้ามา
+2. Process: ตัวงานที่มีอยู่จริงหรือ (Instance of class) ใน OOP
+
+```conf
+          Scale
+    (Running Process)       
+            A
+            |
+            |
+            |.____________.
+            ||            |
+            ||  web app 2 |
+            ||____________|
+            |.____________. .____________.
+            ||            | |            |
+            ||  web app 1 | |   worker1  |
+            ||____________| |____________|
+            └────────────────────────────────────────> Workload diversity
+                   web          worker         ...       (Process Type)
+web:          bundle exec ruby web.rb -p $PORT
+fastworker:   QUEUE=urgent bundle exec rake resque:work
+# Declare the process type ad
+```
+
+Application ที่ทำตาม 12 Factor จะไม่เขียน PID ไฟล์แต่จะใช้งานตัว OS process manager (systemd, foreman)
+
+### 9. Disposability
+
+`Maximize robustness with fast startup and graceful shutdown`
+
+Application ที่ใช้ 12 Factor ตัว Process นั้นจะสามารถใช้แล่้วทิ้งได้ (Statless Application) ทำให้สามารถใช้ความสามารถในการ Scaling ได้อย่างสุดยอด
+
+Process ต้องปิดตัวอย่างสมบูรณ์เหมือนได้รับ SIGTERM จาก Process manager สำหรับ Web server จะหมายถึงการทำงานของ Request หนึ่งเสร็จพอดีและก็จบการทำงาน
+
+จะมีการใช้งาน Message queue มาร่วมด้วย ก็คือ Worker process นั้นจะทำงานเสร็จสมบูรณ์ก็ต่อเมื่อคืน Job กลับสู่ Message queue ที่ใช้งานอยู่ ทำให้เรามั่นใจได้ว่าทุก Request ที่ส่งเข้ามานั้นสามารถตอบกลับได้หมด
+
+อันนี้ไม่ชัว:: ก็คือถ้ามันทำงานไม่สมบูรณ์มันจะส่ง NACK กลับและ job จะ return สู่ message queue โดยอัติโนมัติ
+
+### 10. Dev/prod parity
+
+`Keep development, staging, and production as similar as possible`
+
+ในอดีตความต่างกันระหว่าง Deploy จะถูกแบ่งออกเป็นประมาณ 3 อย่าง
+- Time gap: developer เขียน Code ก็ Update ได้บ่อยซึ่งต่างจากตัว Production Environment ที่นาน ๆ ทีจะมีการ Update code
+- Personnel gap: developer เขียน Ops deploy
+- Tool gap: ในเครื่องของ Dev เองอาจจะใช้ Nginx, SQLite, OS X แต่เมื่ออยู่บน Production deploy อาจจะใช้งาน Apache, MYSQL, Ubuntu แทนก็เป็นได้
+
+12 Factor ถูกออกแบบมาเพื่อให้เกิด Continuous deployment โดยทำให้ gap ข้างต้นนั้นลดลงน้อยที่สุด
+- เขียนเสร็จ Deploy ได้เลย
+- Dev เขียนเสร็จดูคุณภาพของงานได้เลย
+- ทำให้เครื่องมือของ Developer environment และ Production environment นั้นเหมือนกันมากที่สุด
+
+### 11. Logs
+
+`Treat logs as event streams`
+
+อธิบายการทำงานของ Application 1 เหตุการณ์ที่เกินขึ้นมีเวลามีคำอธิบายว่าเกิดอะไรขึ้น ไปเรื่อย ๆ ตลอดการทำงานของ Application 
+
+การทำงานของ Application กับ Logs ที่ใช้งานร่วมกับ 12 Factor ก็คือไม่ต้องสนว่า Logs นั้นจะถูกจัดการหรือทำ Buffer แล้วส่งไปที่ไหน Application แค่พ้น Logs ออกมาก็พอ `stdout`
+
+จะมีตัวมาจัดการกับ Logs และนำไปเก็บยังที่ ๆ ใช้จัดเก็บเองเช่นพวก FluentD
+
+### 12. Admin processes
+
+`Run admin/management tasks as one-off processes`
+
+เป็นพวกการทำงานที่สั่งแค่ครั้งเดียวสำหรับให้ Application นั้น ๆ เช่น `python manage.py makemigrations` ก็ทำการ migrate ตัว database
 
 ## Day0, 1, 2 operation
 
