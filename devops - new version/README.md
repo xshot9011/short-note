@@ -17,7 +17,6 @@ find incomplete coming soon section by "coming soon"
 
 [coming soon]
 
-<<<<<<< HEAD
 ## 12 Factor Apps Methodology
 
 12 Factor เป็นวิธีการสร้าง Software as a service (SaaS)
@@ -221,11 +220,26 @@ Process ต้องปิดตัวอย่างสมบูรณ์เห
 
 เป็นพวกการทำงานที่สั่งแค่ครั้งเดียวสำหรับให้ Application นั้น ๆ เช่น `python manage.py makemigrations` ก็ทำการ migrate ตัว database
 
-=======
->>>>>>> parent of 269d3e4... (day012): add software life
 ## Day0, 1, 2 operation
 
-[coming soon]
+### Day0 น่าเบื่อ แต่สำคัญ
+
+เป็นช่วงต้นของ project ที่ใช้ในการออกแบบและ design ทั้ง software และ architecture
+
+เป็นขั้นตอนที่น่าเบื่อแต่ความสำเร็จของ project ก็ขึ้นอยู่กับขั้นตอนนี้
+
+วางแผนการใช้ CPU, RAM, disk แต่ถ้าบน cloud ทำให้ความผิดพลาดในการคาดการณ์การใช้งานสิ่งเหล่านี้เป็นความผิดที่รุนแรงน้อยลงได้ เพราะสามารถปรับเปลี่ยนได้ในบางเวลา
+
+### Day1 สิ่งต่าง ๆ ถูกสรรสร้าง
+
+เกี่ยวกับพัฒนาและ deploy software ที่ถูกออกแบบบน Day0 และพวก Infrastructure ที่เกี่ยวกับมัน
+
+### Day2
+
+เริ่มทำการ monitoring ตัวระบบต่าง ๆ รวมทั้ง software การเก็บ Metrics, Logs, Tracing <- (Application performance monitoring (APM)) 
+
+// ที่ทำโปรเจ็คจบไปคือรวม Day2 ไปด้วยแต่เข้าใจผิดว่ามันคือ Day1
+
 
 # CI/CD Tools
 
